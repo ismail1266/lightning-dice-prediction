@@ -40,5 +40,5 @@ A real-time prediction tool for Evolution Gaming's Lightning Dice game with adva
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/your-username/lightning-dice-predictor.git
+git clone https://github.com/ismail1266/lightning-dice-prediction.git
 cd lightning-dice-predictor
