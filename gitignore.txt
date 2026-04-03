@@ -1,0 +1,50 @@
+# Dependencies
+node_modules/
+package-lock.json
+yarn.lock
+
+# Environment variables
+.env
+.env.local
+.env.production
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+*.sublime-*
+
+# Build files
+dist/
+build/
+*.tar.gz
+
+# Temporary files
+tmp/
+temp/
+
+# ML Model files
+models/
+*.bin
+*.json
+*.weights
+
+# Local storage
+localStorage/

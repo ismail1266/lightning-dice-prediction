@@ -1,0 +1,32 @@
+{
+  "name": "lightning-dice-predictor",
+  "version": "3.0.0",
+  "description": "Lightning Dice Prediction Tool with Advanced AI/ML Features",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "keywords": [
+    "lightning-dice",
+    "prediction",
+    "evolution-gaming",
+    "machine-learning",
+    "tensorflow",
+    "neural-network",
+    "ai"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "axios": "^1.6.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}
