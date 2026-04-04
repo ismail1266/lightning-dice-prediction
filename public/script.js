@@ -227,7 +227,7 @@ class LightningDicePredictor {
                         }
                     }
                     
-                    // Add to history
+                    // Add to history with correct/incorrect checking
                     this.addToHistory(gameResult, this.currentPrediction, ultimatePrediction);
                     
                     // Trigger ML update if available
@@ -245,6 +245,12 @@ class LightningDicePredictor {
     addToHistory(result, classicPred, ultimatePred) {
         const time = new Date(result.timestamp).toLocaleTimeString();
         
+        // সঠিকভাবে সঠিক/ভুল চেক করা হচ্ছে
+        const classicCorrect = classicPred ? classicPred.group === result.group : false;
+        const ultimateCorrect = ultimatePred ? ultimatePred === result.group : false;
+        
+        console.log(`📝 History Entry - Result: ${result.group}, Classic: ${classicPred?.group}, Ultimate: ${ultimatePred}, Classic Correct: ${classicCorrect}, Ultimate Correct: ${ultimateCorrect}`);
+        
         const historyEntry = {
             time: time,
             dice: result.diceValues,
@@ -252,8 +258,8 @@ class LightningDicePredictor {
             classicPrediction: classicPred ? classicPred.group : 'MEDIUM',
             ultimatePrediction: ultimatePred ? ultimatePred : 'MEDIUM',
             actualGroup: result.group,
-            classicCorrect: classicPred ? classicPred.group === result.group : false,
-            ultimateCorrect: ultimatePred ? ultimatePred === result.group : false,
+            classicCorrect: classicCorrect,
+            ultimateCorrect: ultimateCorrect,
             timestamp: result.timestamp
         };
         
@@ -264,7 +270,7 @@ class LightningDicePredictor {
             this.predictionHistory.pop();
         }
         
-        // Update history table
+        // Update history table immediately
         this.updateHistoryTable();
     }
     
@@ -283,11 +289,13 @@ class LightningDicePredictor {
         }
         
         tbody.innerHTML = pageItems.map(item => {
+            // Classic prediction display with correct/incorrect
             const classicIcon = item.classicCorrect ? '✓' : '✗';
             const classicClass = item.classicCorrect ? 'correct' : 'incorrect';
             const classicColor = item.classicPrediction === 'LOW' ? '🔴' : 
                                 item.classicPrediction === 'MEDIUM' ? '🟡' : '🟢';
             
+            // Ultimate prediction display with correct/incorrect
             const ultimateIcon = item.ultimateCorrect ? '✓' : '✗';
             const ultimateClass = item.ultimateCorrect ? 'correct' : 'incorrect';
             const ultimateColor = item.ultimatePrediction === 'LOW' ? '🔴' : 
@@ -553,7 +561,7 @@ class LightningDicePredictor {
         if (!tbody) return;
         
         if (numbers.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5">No data available</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="5">No data available<\/td><\/tr>';
             return;
         }
         
