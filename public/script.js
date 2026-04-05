@@ -11,8 +11,8 @@ class LightningDicePredictor {
         this.currentPrediction = null;
         this.connectionRetryCount = 0;
         
-        // New: History tracking
-        this.predictionHistory = [];  // Stores { time, dice, total, classicPrediction, ultimatePrediction, classicCorrect, ultimateCorrect }
+        // History tracking
+        this.predictionHistory = [];
         this.currentPage = 1;
         this.itemsPerPage = 10;
         this.maxHistorySize = 200;
@@ -41,8 +41,6 @@ class LightningDicePredictor {
         this.startTimer();
         
         this.updateConnectionStatus(true);
-        
-        // Setup collapsible stats section
         this.setupCollapsibleStats();
     }
     
@@ -81,7 +79,6 @@ class LightningDicePredictor {
             });
         }
         
-        // Pagination buttons
         const prevBtn = document.getElementById('prevPageBtn');
         const nextBtn = document.getElementById('nextPageBtn');
         
@@ -214,7 +211,6 @@ class LightningDicePredictor {
                     this.animateNewResult();
                     this.updateConnectionStatus(true);
                     
-                    // Get ultimate prediction from ensemble
                     let ultimatePrediction = null;
                     if (window.mlPredictor && window.mlPredictor.ensembleEngine) {
                         const allPredictions = await window.mlPredictor.getAllPredictions(
@@ -227,10 +223,8 @@ class LightningDicePredictor {
                         }
                     }
                     
-                    // Add to history with correct/incorrect checking
                     this.addToHistory(gameResult, this.currentPrediction, ultimatePrediction);
                     
-                    // Trigger ML update if available
                     if (window.mlPredictor && document.getElementById('mlToggle')?.checked) {
                         window.mlPredictor.updateWithNewData();
                     }
@@ -245,19 +239,18 @@ class LightningDicePredictor {
     addToHistory(result, classicPred, ultimatePred) {
         const time = new Date(result.timestamp).toLocaleTimeString();
         
-        // সঠিকভাবে সঠিক/ভুল চেক করা হচ্ছে
         const classicCorrect = classicPred ? classicPred.group === result.group : false;
         const ultimateCorrect = ultimatePred ? ultimatePred === result.group : false;
         
-        console.log(`📝 History Entry - Result: ${result.group}, Classic: ${classicPred?.group}, Ultimate: ${ultimatePred}, Classic Correct: ${classicCorrect}, Ultimate Correct: ${ultimateCorrect}`);
+        console.log(`📝 Result: ${result.group}, Classic Pred: ${classicPred?.group} (${classicCorrect ? '✓' : '✗'}), Ultimate Pred: ${ultimatePred} (${ultimateCorrect ? '✓' : '✗'})`);
         
         const historyEntry = {
             time: time,
             dice: result.diceValues,
             total: result.total,
+            actualGroup: result.group,
             classicPrediction: classicPred ? classicPred.group : 'MEDIUM',
             ultimatePrediction: ultimatePred ? ultimatePred : 'MEDIUM',
-            actualGroup: result.group,
             classicCorrect: classicCorrect,
             ultimateCorrect: ultimateCorrect,
             timestamp: result.timestamp
@@ -265,12 +258,10 @@ class LightningDicePredictor {
         
         this.predictionHistory.unshift(historyEntry);
         
-        // Keep only last 200
         if (this.predictionHistory.length > this.maxHistorySize) {
             this.predictionHistory.pop();
         }
         
-        // Update history table immediately
         this.updateHistoryTable();
     }
     
@@ -289,13 +280,13 @@ class LightningDicePredictor {
         }
         
         tbody.innerHTML = pageItems.map(item => {
-            // Classic prediction display with correct/incorrect
+            // Classic: প্রেডিকশন দেখাবে, সঠিক হলে ✓ ভুল হলে ✗
             const classicIcon = item.classicCorrect ? '✓' : '✗';
             const classicClass = item.classicCorrect ? 'correct' : 'incorrect';
             const classicColor = item.classicPrediction === 'LOW' ? '🔴' : 
                                 item.classicPrediction === 'MEDIUM' ? '🟡' : '🟢';
             
-            // Ultimate prediction display with correct/incorrect
+            // Ultimate: প্রেডিকশন দেখাবে, সঠিক হলে ✓ ভুল হলে ✗
             const ultimateIcon = item.ultimateCorrect ? '✓' : '✗';
             const ultimateClass = item.ultimateCorrect ? 'correct' : 'incorrect';
             const ultimateColor = item.ultimatePrediction === 'LOW' ? '🔴' : 
@@ -305,7 +296,7 @@ class LightningDicePredictor {
                 <tr>
                     <td>${item.time}</td>
                     <td class="dice-values">🎲 ${item.dice}</td>
-                    <td><strong>${item.total}</strong></td>
+                    <td><strong>${item.total}</strong> <span style="font-size:11px;opacity:0.7;">(${item.actualGroup})</span></td>
                     <td>
                         <span class="prediction-badge ${classicClass}">
                             <span class="icon">${classicIcon}</span>
@@ -778,7 +769,6 @@ class LightningDicePredictor {
         console.error(message);
     }
     
-    // Getter methods for ML modules
     getBaseStats() {
         return this.baseStats;
     }
@@ -796,7 +786,6 @@ class LightningDicePredictor {
     }
 }
 
-// Initialize when DOM is ready
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
         window.originalPredictor = new LightningDicePredictor();
