@@ -193,6 +193,23 @@ class LightningDicePredictor {
                 
                 if (this.lastGameId !== gameId) {
                     console.log('🆕 New result detected!');
+                    console.log('📸 Taking prediction snapshot before update...');
+                    
+                    // ✅ FIX 1: রেজাল্ট আসার আগের প্রেডিকশন স্ন্যাপশট নেওয়া
+                    const classicPredictionSnapshot = this.currentPrediction ? {...this.currentPrediction} : null;
+                    
+                    // ✅ FIX 2: Ensemble prediction snapshot নেওয়া
+                    let ultimatePredictionSnapshot = null;
+                    if (window.mlPredictor && window.mlPredictor.ensembleEngine) {
+                        const allPredictions = await window.mlPredictor.getAllPredictions(
+                            this.allResults, 
+                            this.baseStats
+                        );
+                        if (window.mlPredictor.ensembleEngine) {
+                            const ensembleResult = window.mlPredictor.ensembleEngine.combine(allPredictions);
+                            ultimatePredictionSnapshot = ensembleResult.final.group;
+                        }
+                    }
                     
                     const gameResult = this.parseGameData(data);
                     this.allResults.unshift(gameResult);
@@ -203,6 +220,10 @@ class LightningDicePredictor {
                         this.allResults.pop();
                     }
                     
+                    // ✅ FIX 3: স্ন্যাপশট ব্যবহার করে history তে যোগ করা
+                    this.addToHistory(gameResult, classicPredictionSnapshot, ultimatePredictionSnapshot);
+                    
+                    // ✅ FIX 4: নতুন রেজাল্টের ভিত্তিতে প্রেডিকশন আপডেট করা
                     this.analyzeAndPredict();
                     this.updateRecentResultsDisplay();
                     this.updatePredictionDisplay();
@@ -210,20 +231,6 @@ class LightningDicePredictor {
                     
                     this.animateNewResult();
                     this.updateConnectionStatus(true);
-                    
-                    let ultimatePrediction = null;
-                    if (window.mlPredictor && window.mlPredictor.ensembleEngine) {
-                        const allPredictions = await window.mlPredictor.getAllPredictions(
-                            this.allResults, 
-                            this.baseStats
-                        );
-                        if (window.mlPredictor.ensembleEngine) {
-                            const ensembleResult = window.mlPredictor.ensembleEngine.combine(allPredictions);
-                            ultimatePrediction = ensembleResult.final.group;
-                        }
-                    }
-                    
-                    this.addToHistory(gameResult, this.currentPrediction, ultimatePrediction);
                     
                     if (window.mlPredictor && document.getElementById('mlToggle')?.checked) {
                         window.mlPredictor.updateWithNewData();
@@ -239,10 +246,15 @@ class LightningDicePredictor {
     addToHistory(result, classicPred, ultimatePred) {
         const time = new Date(result.timestamp).toLocaleTimeString();
         
+        // ✅ FIX 5: সঠিকভাবে correctness নির্ণয় করা
         const classicCorrect = classicPred ? classicPred.group === result.group : false;
         const ultimateCorrect = ultimatePred ? ultimatePred === result.group : false;
         
-        console.log(`📝 Result: ${result.group}, Classic Pred: ${classicPred?.group} (${classicCorrect ? '✓' : '✗'}), Ultimate Pred: ${ultimatePred} (${ultimateCorrect ? '✓' : '✗'})`);
+        // ✅ FIX 6: কনসোল লগ ডিবাগিং এর জন্য
+        console.log('📝 Adding to History:');
+        console.log(`   Result: ${result.group} (${result.total})`);
+        console.log(`   Classic Prediction: ${classicPred?.group || 'N/A'} → ${classicCorrect ? '✓ CORRECT' : '✗ WRONG'}`);
+        console.log(`   Ultimate Prediction: ${ultimatePred || 'N/A'} → ${ultimateCorrect ? '✓ CORRECT' : '✗ WRONG'}`);
         
         const historyEntry = {
             time: time,
@@ -280,13 +292,13 @@ class LightningDicePredictor {
         }
         
         tbody.innerHTML = pageItems.map(item => {
-            // Classic: প্রেডিকশন দেখাবে, সঠিক হলে ✓ ভুল হলে ✗
+            // Classic prediction display with correct/wrong icon
             const classicIcon = item.classicCorrect ? '✓' : '✗';
             const classicClass = item.classicCorrect ? 'correct' : 'incorrect';
             const classicColor = item.classicPrediction === 'LOW' ? '🔴' : 
                                 item.classicPrediction === 'MEDIUM' ? '🟡' : '🟢';
             
-            // Ultimate: প্রেডিকশন দেখাবে, সঠিক হলে ✓ ভুল হলে ✗
+            // Ultimate prediction display with correct/wrong icon
             const ultimateIcon = item.ultimateCorrect ? '✓' : '✗';
             const ultimateClass = item.ultimateCorrect ? 'correct' : 'incorrect';
             const ultimateColor = item.ultimatePrediction === 'LOW' ? '🔴' : 
